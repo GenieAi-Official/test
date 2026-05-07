@@ -18,6 +18,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
     login = sub.add_parser("login", help="打开浏览器进行手动登录并保存会话")
     login.add_argument("--url", default="https://www.xiaohongshu.com", help="登录页 URL")
+    login.add_argument("--wait-seconds", type=int, default=0, help="自动等待多少秒后退出（0 表示等待回车）")
 
     search = sub.add_parser("search", help="关键词搜索抓取")
     search.add_argument("keyword", help="搜索关键词")
@@ -48,7 +49,10 @@ async def _cmd_login(args: argparse.Namespace) -> int:
     )
     async with scraper:
         await scraper.open_login(url=args.url)
-        input("完成登录后按回车键退出...")
+        if args.wait_seconds and args.wait_seconds > 0:
+            await asyncio.sleep(args.wait_seconds)
+        else:
+            input("完成登录后按回车键退出...")
     return 0
 
 

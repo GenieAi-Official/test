@@ -32,6 +32,12 @@ python -m playwright install chromium
 python -m xhs_scraper login --user-data-dir ./.xhs_profile
 ```
 
+无交互环境（例如被 Web 服务调起）可使用自动等待退出：
+
+```bash
+python -m xhs_scraper login --user-data-dir ./.xhs_profile --wait-seconds 600
+```
+
 关键词搜索并抓取前 30 条结果到 Markdown：
 
 ```bash
@@ -55,3 +61,24 @@ python -m xhs_scraper user "https://www.xiaohongshu.com/user/profile/xxxxxxxx" -
 - `out/index.md`：本次抓取索引
 - `out/notes/<note_id>.md`：每条笔记的 Markdown
 - `out/media/<note_id>/...`：可选的图片下载目录
+
+## 在线网页（自部署控制台）
+
+仓库内提供一个可自部署的 Web 控制台（React + Express），用于在网页里创建任务、查看日志、预览 index.md 并下载产物（zip）。实现位于 [webapp](file:///workspace/webapp)。
+
+启动方式：
+
+```bash
+cd webapp
+pnpm install
+pnpm run dev
+```
+
+访问：
+
+- http://localhost:5173/
+
+说明：
+
+- “打开登录浏览器”会在运行 Web 服务的那台机器上弹出浏览器窗口；远程服务器需要远程桌面/带 GUI 的运行环境
+- 抓取仍复用 Python Playwright，请先按上面的安装步骤安装好 Python 依赖与 Chromium

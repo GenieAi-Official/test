@@ -1,0 +1,24 @@
+{
+  "id": "a4e903bd-31b3-4188-821f-e410bb766828",
+  "type": "search",
+  "status": "failed",
+  "createdAt": "2026-05-07T08:24:44.755Z",
+  "params": {
+    "type": "search",
+    "keyword": "露营装备",
+    "limit": 30,
+    "downloadMedia": false
+  },
+  "logs": [
+    "queued",
+    "running",
+    "spawn python task=a4e903bd-31b3-4188-821f-e410bb766828 type=search",
+    "python -m xhs_scraper search 露营装备 --limit 30 --out /workspace/webapp/data/out/a4e903bd-31b3-4188-821f-e410bb766828 --user-data-dir /workspace/webapp/data/profile",
+    "usage: xhs_scraper [-h] [--user-data-dir USER_DATA_DIR] [--headed]                    [--timeout-ms TIMEOUT_MS] [--delay DELAY]                    {login,search,note,user} ... xhs_scraper: error: unrecognized arguments: --user-data-dir /workspace/webapp/data/profile",
+    "failed: exit 2"
+  ],
+  "artifacts": [],
+  "startedAt": "2026-05-07T08:24:44.756Z",
+  "finishedAt": "2026-05-07T08:24:45.542Z",
+  "error": "exit 2"
+}
