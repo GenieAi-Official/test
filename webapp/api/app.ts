@@ -9,6 +9,9 @@ import express, {
 } from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
 import loginRoutes from './routes/login.js'
 import taskRoutes from './routes/tasks.js'
 import { ensureDirs } from './services/paths.js'
@@ -28,6 +31,18 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }))
  */
 app.use('/api/login', loginRoutes)
 app.use('/api/tasks', taskRoutes)
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const clientDistDir = path.resolve(__dirname, '..', 'dist')
+const clientIndexHtml = path.join(clientDistDir, 'index.html')
+if (fs.existsSync(clientIndexHtml)) {
+  app.use(express.static(clientDistDir))
+  app.get('*', (req: Request, res: Response, next: NextFunction) => {
+    if (req.path.startsWith('/api')) return next()
+    res.sendFile(clientIndexHtml)
+  })
+}
 
 /**
  * health

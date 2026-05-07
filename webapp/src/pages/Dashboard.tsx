@@ -51,6 +51,7 @@ export default function Dashboard() {
         <div className="grid gap-4">
           <TaskCreate
             busy={busy}
+            headfulAvailable={login?.headfulAvailable}
             onOpenLogin={runOpenLogin}
             onCreate={async (payload: CreateTaskRequest) => {
               const t = await runCreateTask(payload)

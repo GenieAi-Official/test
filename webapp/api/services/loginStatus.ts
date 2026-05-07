@@ -4,19 +4,20 @@ import type { LoginStatusResponse } from '../../shared/types.js'
 import { repoRoot, userDataDir } from './paths.js'
 
 export async function checkLoginStatus(): Promise<LoginStatusResponse> {
+  const headfulAvailable = process.env.XHS_ALLOW_HEADED_LOGIN === '1'
   if (!fs.existsSync(userDataDir)) {
-    return { status: 'not_logged_in', message: '未找到会话目录' }
+    return { status: 'not_logged_in', message: '未找到会话目录', headfulAvailable }
   }
 
   try {
     const result = await runPythonCheck()
     if (result.ok === true) {
-      if (result.loggedIn === true) return { status: 'logged_in', message: '已登录（校验成功）' }
-      if (result.loggedIn === false) return { status: 'not_logged_in', message: '未登录（校验成功）' }
+      if (result.loggedIn === true) return { status: 'logged_in', message: '已登录（校验成功）', headfulAvailable }
+      if (result.loggedIn === false) return { status: 'not_logged_in', message: '未登录（校验成功）', headfulAvailable }
     }
-    return { status: 'unknown', message: result.error || '无法确认登录状态' }
+    return { status: 'unknown', message: result.error || '无法确认登录状态', headfulAvailable }
   } catch (e) {
-    return { status: 'unknown', message: e instanceof Error ? e.message : '无法确认登录状态' }
+    return { status: 'unknown', message: e instanceof Error ? e.message : '无法确认登录状态', headfulAvailable }
   }
 }
 
@@ -64,4 +65,3 @@ async function runPythonCheck(): Promise<{ ok: boolean; loggedIn?: boolean; erro
     })
   })
 }
-

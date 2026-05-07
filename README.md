@@ -82,3 +82,33 @@ pnpm run dev
 
 - “打开登录浏览器”会在运行 Web 服务的那台机器上弹出浏览器窗口；远程服务器需要远程桌面/带 GUI 的运行环境
 - 抓取仍复用 Python Playwright，请先按上面的安装步骤安装好 Python 依赖与 Chromium
+
+## 部署上线（Docker）
+
+默认按“纯无头服务器”假设部署：不提供网页端弹窗登录（`XHS_ALLOW_HEADED_LOGIN=0`），需要你在本地（有浏览器的机器）先登录一次，再把会话目录同步到服务器的 `./data/profile`。
+
+### 1) 在服务器启动服务
+
+```bash
+docker compose up -d --build
+```
+
+访问：
+
+- http://<你的服务器IP>:3001/
+
+### 2) 本地手动登录并同步会话
+
+在你自己的电脑（有桌面浏览器）运行：
+
+```bash
+python -m xhs_scraper login --user-data-dir ./profile
+```
+
+把 `./profile` 整个目录复制到服务器的 `./data/profile`（与 `docker-compose.yml` 同级的 data 目录），重启容器后即可在网页里直接创建抓取任务。
+
+### 可选：启用服务器端“弹窗登录”
+
+仅当服务器具备 GUI/远程桌面且容器能访问显示设备时才建议使用，并将环境变量设置为：
+
+- `XHS_ALLOW_HEADED_LOGIN=1`

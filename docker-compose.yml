@@ -1,0 +1,15 @@
+services:
+  xhs-console:
+    build:
+      context: .
+      dockerfile: webapp/Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      DATA_DIR: /data
+      XHS_USER_DATA_DIR: /data/profile
+      XHS_ALLOW_HEADED_LOGIN: "0"
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+

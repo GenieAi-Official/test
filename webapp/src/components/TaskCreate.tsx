@@ -12,6 +12,7 @@ const typeMeta: Record<TaskType, { label: string; icon: any }> = {
 export function TaskCreate(props: {
   onOpenLogin: () => Promise<void>
   onCreate: (payload: CreateTaskRequest) => Promise<void>
+  headfulAvailable?: boolean
   busy?: boolean
 }) {
   const [type, setType] = useState<TaskType>('search')
@@ -44,7 +45,7 @@ export function TaskCreate(props: {
         </div>
         <button
           className="inline-flex items-center gap-2 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--card))] px-3 py-2 text-sm font-medium shadow-[0_10px_30px_rgba(0,0,0,0.10)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_50px_rgba(0,0,0,0.14)] disabled:opacity-60"
-          disabled={props.busy || localBusy !== 'none'}
+          disabled={props.busy || localBusy !== 'none' || props.headfulAvailable === false}
           onClick={async () => {
             setLocalBusy('login')
             try {
@@ -157,4 +158,3 @@ export function TaskCreate(props: {
     </Card>
   )
 }
-

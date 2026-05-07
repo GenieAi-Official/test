@@ -38,4 +38,5 @@ export type LoginStatus = 'unknown' | 'logged_in' | 'not_logged_in'
 export interface LoginStatusResponse {
   status: LoginStatus
   message: string
+  headfulAvailable?: boolean
 }
