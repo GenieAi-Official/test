@@ -1,2 +1,57 @@
-# test
-test for xxx
+# xhs-scraper（小红书内容抓取工具）
+
+基于 Playwright 的小红书网页端抓取脚本，支持：
+
+- 关键词搜索抓取：批量拿到笔记链接并导出
+- 笔记详情抓取：标题、正文、作者、图片/视频（尽力提取）、互动数据（尽力提取）
+- 用户主页抓取：抓取该用户笔记列表并批量抓取详情
+- Markdown 导出：可选把图片下载到本地并在 Markdown 中引用
+
+本工具不会绕过验证码、风控或登录限制；如需登录，请使用浏览器手动登录一次，后续复用本地会话。
+
+## 环境要求
+
+- Python 3.10+
+- Playwright（需要额外安装浏览器）
+
+## 安装
+
+```bash
+python -m venv .venv
+. .venv/bin/activate
+python -m pip install -U pip
+python -m pip install -r requirements.txt
+python -m playwright install chromium
+```
+
+## 快速开始
+
+首次登录（会打开浏览器窗口）：
+
+```bash
+python -m xhs_scraper login --user-data-dir ./.xhs_profile
+```
+
+关键词搜索并抓取前 30 条结果到 Markdown：
+
+```bash
+python -m xhs_scraper search "露营装备" --limit 30 --out ./out --user-data-dir ./.xhs_profile
+```
+
+抓取单条笔记：
+
+```bash
+python -m xhs_scraper note "https://www.xiaohongshu.com/explore/xxxxxxxx" --out ./out --user-data-dir ./.xhs_profile
+```
+
+抓取用户主页（会先拿列表，再抓详情）：
+
+```bash
+python -m xhs_scraper user "https://www.xiaohongshu.com/user/profile/xxxxxxxx" --limit 30 --out ./out --user-data-dir ./.xhs_profile
+```
+
+## 输出结构
+
+- `out/index.md`：本次抓取索引
+- `out/notes/<note_id>.md`：每条笔记的 Markdown
+- `out/media/<note_id>/...`：可选的图片下载目录
