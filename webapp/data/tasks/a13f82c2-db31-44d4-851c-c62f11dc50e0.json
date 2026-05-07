@@ -1,0 +1,25 @@
+{
+  "id": "a13f82c2-db31-44d4-851c-c62f11dc50e0",
+  "type": "search",
+  "status": "failed",
+  "createdAt": "2026-05-07T08:50:51.855Z",
+  "params": {
+    "type": "search",
+    "keyword": "露营",
+    "limit": 30,
+    "downloadMedia": true
+  },
+  "logs": [
+    "queued",
+    "running",
+    "spawn python task=a13f82c2-db31-44d4-851c-c62f11dc50e0 type=search",
+    "python -m xhs_scraper search 露营 --limit 30 --out /workspace/webapp/data/out/a13f82c2-db31-44d4-851c-c62f11dc50e0 --user-data-dir /workspace/webapp/data/profile --download-media",
+    "usage: xhs_scraper [-h] [--user-data-dir USER_DATA_DIR] [--headed]                    [--timeout-ms TIMEOUT_MS] [--delay DELAY]                    {login,search,note,user} ...",
+    "xhs_scraper: error: unrecognized arguments: --user-data-dir /workspace/webapp/data/profile",
+    "failed: exit 2"
+  ],
+  "artifacts": [],
+  "startedAt": "2026-05-07T08:50:51.856Z",
+  "finishedAt": "2026-05-07T08:50:52.606Z",
+  "error": "exit 2"
+}
