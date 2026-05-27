@@ -1,0 +1,1984 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WorkBuddy x Genie MVP Prototype</title>
+  <style>
+    :root {
+      --canvas: #f7f7f5;
+      --panel: #ffffff;
+      --sidebar: #f4f4f2;
+      --soft: #eeeeeb;
+      --soft-2: #e7e7e4;
+      --ink: #202124;
+      --ink-soft: #44474a;
+      --muted: #767a7e;
+      --faint: #aeb2b6;
+      --line: rgba(32, 33, 36, 0.11);
+      --line-strong: rgba(32, 33, 36, 0.18);
+      --mint: #16b792;
+      --mint-soft: #e7f8f3;
+      --blue: #2474d8;
+      --purple: #7c3aed;
+      --warning: #f5b400;
+      --success: #12a77b;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
+      --shadow-soft: 0 18px 60px rgba(32, 33, 36, 0.08);
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+      color: var(--ink);
+      background: var(--canvas);
+      font-family: var(--font);
+      font-size: 14px;
+    }
+
+    body[data-screen="entry"] {
+      overflow: hidden;
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    .app-shell {
+      display: grid;
+      grid-template-columns: 326px 450px minmax(640px, 1fr);
+      min-height: 100vh;
+      background: var(--canvas);
+    }
+
+    body[data-screen="entry"] .app-shell {
+      grid-template-columns: 326px minmax(720px, 1fr);
+    }
+
+    body[data-screen="entry"] .chat-pane {
+      border-right: 0;
+    }
+
+    body[data-screen="entry"] .workspace-pane {
+      display: none;
+    }
+
+    body[data-screen="entry"] .chat-head {
+      display: none;
+    }
+
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      border-right: 1px solid var(--line);
+      background: #f7f7f6;
+    }
+
+    .side-top {
+      padding: 8px 13px 12px;
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 760;
+    }
+
+    .brand-mark {
+      position: relative;
+      width: 34px;
+      height: 34px;
+      flex: 0 0 auto;
+      overflow: hidden;
+      border-radius: 10px;
+      background: var(--mint);
+      box-shadow: inset -10px -12px 0 rgba(0, 0, 0, 0.08);
+    }
+
+    .brand-mark::before {
+      position: absolute;
+      top: 8px;
+      left: 7px;
+      width: 20px;
+      height: 15px;
+      border-radius: 8px 8px 6px 6px;
+      background: #fff;
+      content: "";
+    }
+
+    .brand-mark::after {
+      position: absolute;
+      top: 13px;
+      left: 12px;
+      width: 4px;
+      height: 4px;
+      border-radius: 999px;
+      background: var(--mint);
+      box-shadow: 10px 0 0 var(--mint);
+      content: "";
+    }
+
+    .version {
+      display: none;
+    }
+
+    .enterprise {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      width: 52px;
+      height: 26px;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      color: var(--ink-soft);
+      white-space: nowrap;
+    }
+
+    .enterprise::before {
+      content: "♧";
+      font-size: 16px;
+      color: var(--ink-soft);
+    }
+
+    .enterprise span {
+      display: none;
+    }
+
+    .enterprise {
+      font-size: 0;
+    }
+
+    .enterprise::after {
+      content: "◁";
+      font-size: 16px;
+      color: var(--ink-soft);
+    }
+
+    .search-row {
+      display: grid;
+      grid-template-columns: 1fr 34px;
+      gap: 9px;
+      margin-bottom: 12px;
+    }
+
+    .search-box,
+    .filter-button,
+    .new-task {
+      border: 1px solid var(--line-strong);
+      background: var(--panel);
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      height: 36px;
+      padding: 0 12px;
+      border-radius: var(--radius-sm);
+      color: var(--muted);
+    }
+
+    .filter-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      color: var(--ink-soft);
+      font-weight: 700;
+    }
+
+    .new-task {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      height: 36px;
+      gap: 10px;
+      padding: 0 14px;
+      border-color: transparent;
+      border-radius: var(--radius-sm);
+      background: #e9e9e7;
+      color: var(--ink-soft);
+      text-align: left;
+    }
+
+    .side-nav {
+      padding: 2px 13px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      height: 40px;
+      padding: 0 6px;
+      border-radius: var(--radius-sm);
+      color: var(--ink-soft);
+      font-size: 16px;
+    }
+
+    .nav-item.active {
+      background: #e9e9e7;
+      color: var(--ink);
+    }
+
+    .icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      min-width: 20px;
+      height: 20px;
+      color: currentColor;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .workspace {
+      margin-top: 18px;
+      padding: 0 13px;
+    }
+
+    .side-label {
+      margin: 0 0 10px 6px;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .folder-row {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      height: 34px;
+      padding: 0 8px;
+      color: var(--ink-soft);
+    }
+
+    .task-list {
+      display: grid;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .task-item {
+      display: grid;
+      grid-template-columns: 20px 1fr auto;
+      align-items: center;
+      gap: 8px;
+      min-height: 36px;
+      padding: 7px 10px;
+      border-radius: var(--radius-sm);
+      color: var(--ink-soft);
+    }
+
+    .task-item.active {
+      background: #e8e8e6;
+      color: var(--ink);
+    }
+
+    .task-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-width: 0;
+      height: 22px;
+      padding: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .side-bottom {
+      margin-top: auto;
+      padding: 16px 18px 20px;
+    }
+
+    body[data-screen="entry"] .task-item:not(:first-child) {
+      display: none;
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      border-radius: var(--radius-md);
+    }
+
+    body[data-screen="entry"] .user-card {
+      display: none;
+    }
+
+    body[data-screen="entry"] .side-bottom {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px 12px;
+    }
+
+    body[data-screen="entry"] .side-bottom::before {
+      content: "☼  ◔  ⚙";
+      color: var(--ink-soft);
+      font-size: 18px;
+      letter-spacing: 8px;
+    }
+
+    .avatar {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--mint);
+      color: #062d26;
+      font-weight: 800;
+    }
+
+    .user-main {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .user-name {
+      font-weight: 660;
+    }
+
+    .user-meta {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .chat-pane {
+      position: relative;
+      min-width: 0;
+      border-right: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .chat-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 48px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(14px);
+    }
+
+    .chat-title {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .view-toggle {
+      display: none;
+      padding: 3px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--soft);
+      gap: 2px;
+    }
+
+    .view-toggle button {
+      height: 28px;
+      padding: 0 11px;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .view-toggle button.active {
+      background: #0a0a0a;
+      color: #fff;
+    }
+
+    .entry-body {
+      display: flex;
+      min-height: 100vh;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: clamp(185px, 30vh, 318px) 0 18px;
+    }
+
+    .mascot {
+      position: relative;
+      width: 140px;
+      height: 132px;
+      margin-bottom: 20px;
+      opacity: 0.82;
+    }
+
+    .mascot-body {
+      position: absolute;
+      top: 34px;
+      left: 33px;
+      width: 84px;
+      height: 62px;
+      border: 2px solid #a9adb2;
+      border-radius: 28px 28px 22px 22px;
+      background:
+        linear-gradient(90deg, rgba(120, 124, 130, 0.16) 1px, transparent 1px) 0 0 / 10px 10px,
+        linear-gradient(rgba(120, 124, 130, 0.14) 1px, transparent 1px) 0 0 / 10px 10px,
+        #f2f2f0;
+      box-shadow: inset 0 0 0 6px rgba(255, 255, 255, 0.55);
+    }
+
+    .mascot-ear {
+      position: absolute;
+      top: 16px;
+      width: 26px;
+      height: 38px;
+      border: 2px solid #a9adb2;
+      border-radius: 16px 16px 4px 4px;
+      background: #f2f2f0;
+    }
+
+    .mascot-ear.left {
+      left: 42px;
+      transform: rotate(-24deg);
+    }
+
+    .mascot-ear.right {
+      right: 42px;
+      transform: rotate(24deg);
+    }
+
+    .mascot-eye {
+      position: absolute;
+      top: 61px;
+      width: 5px;
+      height: 18px;
+      border-radius: 999px;
+      background: #93979d;
+    }
+
+    .mascot-eye.left {
+      left: 69px;
+    }
+
+    .mascot-eye.right {
+      right: 69px;
+    }
+
+    .hero-title {
+      margin: 0 0 18px;
+      font-size: 27px;
+      font-weight: 780;
+      line-height: 1.15;
+      text-align: center;
+    }
+
+    .hero-sub {
+      margin: 0 0 38px;
+      color: var(--muted);
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .primary-tabs {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 0;
+    }
+
+    .primary-label {
+      color: var(--muted);
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .primary-pill-group {
+      display: flex;
+      align-items: center;
+      padding: 4px;
+      border-radius: 999px;
+      background: #e6e6e4;
+      gap: 3px;
+    }
+
+    .primary-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 38px;
+      padding: 0 18px;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--ink-soft);
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .primary-pill.active {
+      background: #050505;
+      color: #fff;
+    }
+
+    .genie-pill-row {
+      display: flex;
+      flex-wrap: nowrap;
+      justify-content: flex-start;
+      gap: 10px;
+      width: min(870px, calc(100vw - 430px));
+      margin: clamp(88px, 15vh, 156px) auto 10px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding: 0 2px;
+    }
+
+    .genie-pill-row::-webkit-scrollbar {
+      display: none;
+    }
+
+    .cap-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      height: 34px;
+      padding: 0 13px;
+      border-radius: 999px;
+      background: #e7e7e5;
+      color: var(--ink-soft);
+      font-weight: 620;
+      white-space: nowrap;
+    }
+
+    .cap-pill:hover {
+      background: #111;
+      color: #fff;
+    }
+
+    .prompt-examples {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      width: min(870px, calc(100vw - 430px));
+      gap: 10px;
+      margin: clamp(88px, 15vh, 156px) auto 10px;
+    }
+
+    body:not([data-has-type="true"]) .prompt-examples {
+      display: none;
+    }
+
+    body[data-has-type="true"] .genie-pill-row {
+      display: none;
+    }
+
+    .prompt-card {
+      min-height: 76px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--ink-soft);
+      text-align: left;
+      box-shadow: 0 8px 26px rgba(32, 33, 36, 0.04);
+    }
+
+    .prompt-card strong {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .prompt-card span {
+      display: -webkit-box;
+      overflow: hidden;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .composer {
+      width: min(870px, calc(100vw - 430px));
+      position: relative;
+      border-radius: 20px;
+      background: var(--soft);
+      box-shadow: var(--shadow-soft);
+    }
+
+    body[data-screen="entry"] .composer {
+      padding: 34px 12px 10px;
+      background: #f3f3f2;
+      box-shadow: none;
+    }
+
+    body[data-screen="entry"] .composer::before {
+      position: absolute;
+      top: 13px;
+      left: 18px;
+      color: var(--ink-soft);
+      content: "⌘";
+      font-size: 15px;
+      transform: rotate(-20deg);
+    }
+
+    .composer.project {
+      width: min(630px, calc(100% - 42px));
+      margin: 0 auto;
+      box-shadow: none;
+    }
+
+    .composer-top {
+      min-height: 98px;
+      padding: 14px 16px 10px;
+      border-radius: 20px 20px 14px 14px;
+      background: #fff;
+    }
+
+    body[data-screen="entry"] .composer-top {
+      min-height: 72px;
+      padding: 14px 16px 8px;
+      border-radius: 14px;
+    }
+
+    .selected-chip {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: #080808;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .placeholder {
+      display: none;
+      margin-top: 13px;
+      color: #babec2;
+      line-height: 1.55;
+    }
+
+    body[data-has-type="true"] .selected-chip {
+      display: inline-flex;
+    }
+
+    body[data-has-type="true"] .placeholder {
+      display: block;
+    }
+
+    .composer-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 42px;
+      padding: 7px 14px 10px;
+      gap: 12px;
+    }
+
+    .tool-row {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    body[data-screen="entry"] .tool-row {
+      flex: 1;
+    }
+
+    body[data-screen="entry"] .tool-row .tool-button:nth-child(4) {
+      margin-left: auto;
+    }
+
+    .tool-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 30px;
+      min-width: 30px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: #fff;
+      color: var(--ink-soft);
+      white-space: nowrap;
+    }
+
+    .send-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 34px;
+      padding: 0 18px;
+      border-radius: 999px;
+      background: #0b0b0b;
+      color: #fff;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    body[data-screen="entry"] .send-button {
+      width: 30px;
+      min-width: 30px;
+      height: 30px;
+      padding: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: #b6babd;
+      font-size: 18px;
+    }
+
+    .disclaimer {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .conversation {
+      display: flex;
+      height: calc(100vh - 48px);
+      flex-direction: column;
+    }
+
+    .messages {
+      min-height: 0;
+      flex: 1;
+      overflow: auto;
+      padding: 34px 26px 24px;
+    }
+
+    .message {
+      display: flex;
+      gap: 12px;
+      max-width: 420px;
+      margin: 0 auto 24px;
+    }
+
+    .message.user {
+      justify-content: flex-end;
+    }
+
+    .bubble {
+      max-width: 420px;
+      padding: 13px 15px;
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink-soft);
+      line-height: 1.65;
+      box-shadow: none;
+    }
+
+    .message.user .bubble {
+      background: #ececeb;
+      color: var(--ink);
+    }
+
+    .bubble h3 {
+      margin: 0 0 8px;
+      color: var(--ink);
+      font-size: 15px;
+    }
+
+    .steps {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .step {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: #fafaf9;
+      color: var(--ink-soft);
+    }
+
+    .step.done::after {
+      color: var(--success);
+      content: "完成";
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .result-card {
+      margin-top: 12px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .result-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .result-title {
+      font-weight: 720;
+      color: var(--ink);
+    }
+
+    .result-meta {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .link-button {
+      color: var(--blue);
+      background: transparent;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .composer-wrap {
+      padding: 0 0 18px;
+    }
+
+    .workspace-pane {
+      display: flex;
+      min-width: 0;
+      flex-direction: column;
+      background: #fff;
+    }
+
+    .workspace-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 48px;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--line);
+      gap: 14px;
+    }
+
+    .project-tabs {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      gap: 2px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .project-tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .project-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      height: 34px;
+      padding: 0 5px;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--ink-soft);
+      font-size: 12px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .project-tab .icon {
+      width: 14px;
+      min-width: 14px;
+      height: 14px;
+      font-size: 11px;
+    }
+
+    .project-tab.active {
+      background: #eceef7;
+      color: var(--ink);
+    }
+
+    .workspace-actions {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+
+    .icon-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--ink-soft);
+      font-weight: 800;
+    }
+
+    .icon-button:hover {
+      background: var(--soft);
+    }
+
+    .publish-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 34px;
+      min-width: 74px;
+      padding: 0 16px;
+      border-radius: 999px;
+      background: #050505;
+      color: #fff;
+      font-weight: 740;
+      white-space: nowrap;
+    }
+
+    .publish-button.success {
+      background: var(--success);
+    }
+
+    .download-menu {
+      position: absolute;
+      z-index: 5;
+      top: 42px;
+      right: 82px;
+      display: none;
+      min-width: 176px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: #fff;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .download-menu.open {
+      display: block;
+    }
+
+    .download-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      height: 38px;
+      padding: 0 10px;
+      border-radius: var(--radius-sm);
+      background: #fff;
+      color: var(--ink-soft);
+      text-align: left;
+    }
+
+    .download-item:hover {
+      background: var(--soft);
+      color: var(--ink);
+    }
+
+    .tab-content {
+      min-height: 0;
+      flex: 1;
+      overflow: auto;
+      background: #fff;
+    }
+
+    .preview-toolbar {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 12px;
+      min-height: 54px;
+      padding: 8px 18px;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .page-select {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 38px;
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--ink-soft);
+    }
+
+    .preview-stage {
+      display: grid;
+      min-height: calc(100vh - 107px);
+      place-items: center;
+      padding: 0;
+      background: #fff;
+    }
+
+    .app-preview {
+      display: grid;
+      width: 100%;
+      min-height: calc(100vh - 107px);
+      place-items: center;
+      overflow: hidden;
+      border: 0;
+      border-radius: 0;
+      background: #fff;
+      box-shadow: none;
+    }
+
+    .preview-placeholder {
+      color: var(--muted);
+      font-size: 18px;
+      font-weight: 650;
+    }
+
+    .doc-page,
+    .system-page,
+    .cloud-page,
+    .files-page,
+    .changes-page,
+    .browser-page {
+      padding: 22px;
+    }
+
+    .doc-layout {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 18px;
+    }
+
+    .paper {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: #fff;
+    }
+
+    .paper h2 {
+      margin: 0 0 14px;
+      font-size: 21px;
+    }
+
+    .paper h3 {
+      margin: 20px 0 10px;
+      font-size: 15px;
+    }
+
+    .paper p,
+    .paper li {
+      color: var(--ink-soft);
+      line-height: 1.75;
+    }
+
+    .toc-card {
+      align-self: start;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: #fafaf9;
+    }
+
+    .toc-card strong {
+      display: block;
+      margin-bottom: 12px;
+    }
+
+    .toc-card span {
+      display: block;
+      padding: 8px 0;
+      color: var(--muted);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .system-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 18px;
+    }
+
+    .token-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .swatch {
+      min-height: 92px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: #fff;
+    }
+
+    .color {
+      height: 34px;
+      margin-bottom: 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .component-samples {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .sample-card {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: #fff;
+    }
+
+    .cloud-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .cloud-card {
+      min-height: 140px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: #fff;
+    }
+
+    .cloud-card strong {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 16px;
+    }
+
+    .status-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 14px;
+      color: var(--muted);
+    }
+
+    .status-dot {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--success);
+      font-weight: 700;
+    }
+
+    .files-layout {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      min-height: calc(100vh - 92px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    .file-tree {
+      border-right: 1px solid var(--line);
+      background: #fafaf9;
+      padding: 12px 0;
+    }
+
+    .file-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 34px;
+      padding: 0 14px;
+      color: var(--ink-soft);
+      white-space: nowrap;
+    }
+
+    .file-row.folder {
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .file-preview {
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      background: #fff;
+    }
+
+    .change-list {
+      display: grid;
+      gap: 12px;
+      max-width: 760px;
+    }
+
+    .change-card {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: #fff;
+    }
+
+    .diff-line {
+      margin-top: 8px;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      background: #f2fbf7;
+      color: #08775d;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+    }
+
+    .browser-empty {
+      display: grid;
+      min-height: calc(100vh - 92px);
+      place-items: center;
+      color: var(--muted);
+    }
+
+    .toast {
+      position: fixed;
+      z-index: 20;
+      right: 22px;
+      bottom: 22px;
+      display: none;
+      max-width: 340px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: #111;
+      color: #fff;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .toast.show {
+      display: block;
+    }
+
+    .floating-code {
+      position: absolute;
+      top: 118px;
+      right: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: #ffd33d;
+      color: #111;
+      font-weight: 900;
+      box-shadow: 0 12px 30px rgba(90, 70, 0, 0.16);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 1320px) {
+      .app-shell {
+        grid-template-columns: 286px minmax(380px, 38vw) minmax(520px, 1fr);
+      }
+
+      .enterprise,
+      .version {
+        display: none;
+      }
+
+      .prompt-examples {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 980px) {
+      .app-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar,
+      .workspace-pane {
+        min-height: 520px;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .chat-pane {
+        border-right: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="side-top">
+        <div class="brand-row">
+          <div class="brand">
+            <span class="brand-mark" aria-hidden="true"></span>
+            <span>WorkBuddy</span>
+            <span class="version">v4.22.14</span>
+          </div>
+          <button class="enterprise"><span class="icon">▣</span>企业智能体</button>
+        </div>
+        <div class="search-row">
+          <div class="search-box"><span class="icon">⌕</span><span>搜索任务</span></div>
+          <button class="filter-button">≡</button>
+        </div>
+        <button class="new-task" id="newTask"><span class="icon">＋</span><span>新建任务</span></button>
+      </div>
+
+      <nav class="side-nav" aria-label="WorkBuddy navigation">
+        <div class="nav-item"><span class="icon">□</span><span>项目</span></div>
+        <div class="nav-item"><span class="icon">▱</span><span>专家</span></div>
+        <div class="nav-item"><span class="icon">⚒</span><span>技能</span></div>
+        <div class="nav-item"><span class="icon">⌁</span><span>连接器</span></div>
+      </nav>
+
+      <div class="workspace">
+        <p class="side-label">最近</p>
+        <div class="folder-row"><span class="icon">▰</span><span>genie_work</span></div>
+        <div class="task-list">
+          <div class="task-item active" id="projectTask">
+            <span class="icon">✓</span>
+            <span class="task-name">企业官网开发</span>
+            <span class="badge">6分钟前</span>
+          </div>
+          <div class="task-item">
+            <span class="icon">✓</span>
+            <span class="task-name">书架管理网页应用</span>
+            <span class="badge">网页应用</span>
+          </div>
+          <div class="task-item">
+            <span class="icon">✓</span>
+            <span class="task-name">CRM 销售助手原型</span>
+            <span class="badge">原型</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="side-bottom">
+        <div class="user-card">
+          <div class="avatar">ir</div>
+          <div class="user-main">
+            <div class="user-name">irenelanliu</div>
+            <div class="user-meta">企业版</div>
+          </div>
+          <span class="icon">›</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="chat-pane">
+      <header class="chat-head">
+        <div class="chat-title" id="chatTitle">开始</div>
+        <div class="view-toggle" aria-label="prototype views">
+          <button id="entryView" class="active">入口</button>
+          <button id="projectView">项目页</button>
+        </div>
+      </header>
+
+      <section id="entryScreen" class="entry-body">
+        <div class="mascot" aria-hidden="true">
+          <div class="mascot-ear left"></div>
+          <div class="mascot-ear right"></div>
+          <div class="mascot-body"></div>
+          <div class="mascot-eye left"></div>
+          <div class="mascot-eye right"></div>
+        </div>
+        <h1 class="hero-title">Claw Your Ideas Into Reality</h1>
+        <p class="hero-sub">Triggered Anywhere, Completed Locally</p>
+
+        <div class="primary-tabs">
+          <span class="primary-label">开始</span>
+          <div class="primary-pill-group">
+            <button class="primary-pill active"><span class="icon">&lt;&gt;</span>代码开发</button>
+            <button class="primary-pill"><span class="icon">▣</span>日常办公</button>
+            <button class="primary-pill"><span class="icon">✣</span>设计创意</button>
+          </div>
+          <span class="primary-label">任务</span>
+        </div>
+
+        <div class="genie-pill-row" id="typePills"></div>
+        <div class="prompt-examples" id="examples"></div>
+
+        <div class="composer">
+          <div class="composer-top">
+            <span class="selected-chip" id="selectedTypeLabel"></span>
+            <span class="placeholder" id="composerPlaceholder"></span>
+          </div>
+          <div class="composer-bottom">
+            <div class="tool-row">
+              <button class="tool-button"><span class="icon">▣</span>Agent</button>
+              <button class="tool-button"><span class="icon">◒</span>Hy3 preview</button>
+              <button class="tool-button"><span class="icon">⚒</span>技能</button>
+              <button class="tool-button"><span class="icon">▱</span>选择仓库</button>
+            </div>
+            <button class="send-button" id="startGenerate" aria-label="发送">△</button>
+          </div>
+        </div>
+        <div class="disclaimer">内容由 AI 生成，请核实重要信息。</div>
+      </section>
+
+      <section id="projectScreen" class="conversation hidden">
+        <div class="messages">
+          <div class="message user">
+            <div class="bubble">帮我做一个书架管理网页应用，支持书籍录入、分类筛选、借阅状态和后台管理。</div>
+          </div>
+          <div class="message">
+            <div class="avatar">WB</div>
+            <div class="bubble">
+              <h3>已进入 Genie 网页应用生成模式</h3>
+              我先确认了核心范围：前台书架首页、图书详情、后台管理、登录态、数据存储和发布交付。
+              <div class="steps">
+                <div class="step done">需求文档生成</div>
+                <div class="step done">设计系统生成</div>
+                <div class="step done">代码与预览环境准备</div>
+              </div>
+              <div class="result-card">
+                <div class="result-row">
+                  <div>
+                    <div class="result-title">书架管理网页应用</div>
+                    <div class="result-meta">已生成预览、需求文档、设计系统、云服务配置和文件变更。</div>
+                  </div>
+                  <button class="link-button" id="focusPreview">查看预览 →</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="message" id="publishMessage">
+            <div class="avatar">WB</div>
+            <div class="bubble">
+              <h3>发布准备就绪</h3>
+              右侧项目区可直接发布。发布成功后会生成访问链接，也可以下载代码或复制到 Figma。
+            </div>
+          </div>
+        </div>
+        <div class="composer-wrap">
+          <div class="composer project">
+            <div class="composer-top">
+              <span class="placeholder">继续描述你想修改的内容，例如：把首页改成卡片瀑布流，增加借阅统计...</span>
+            </div>
+            <div class="composer-bottom">
+              <div class="tool-row">
+                <button class="tool-button"><span class="icon">▣</span>Craft</button>
+                <button class="tool-button"><span class="icon">◒</span>Hy3 preview</button>
+                <button class="tool-button"><span class="icon">⚒</span>技能</button>
+              </div>
+              <button class="icon-button">△</button>
+            </div>
+          </div>
+          <div class="disclaimer">内容由 AI 生成，请核实重要信息。</div>
+        </div>
+      </section>
+    </main>
+
+    <section class="workspace-pane">
+      <header class="workspace-head">
+        <nav class="project-tabs" id="projectTabs" aria-label="project tabs"></nav>
+        <div class="workspace-actions">
+          <button class="icon-button" id="downloadToggle" title="下载面板">⇩</button>
+          <div class="download-menu" id="downloadMenu">
+            <button class="download-item" data-toast="已准备复制到 Figma 的设计稿结构。"><span class="icon">Fg</span>复制到 Figma</button>
+            <button class="download-item" data-toast="已准备下载当前项目代码包。"><span class="icon">{}</span>下载代码</button>
+          </div>
+          <button class="publish-button" id="publishButton">发布</button>
+        </div>
+      </header>
+      <div class="tab-content" id="tabContent"></div>
+      <div class="floating-code">&lt;/&gt;</div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const types = [
+      {
+        name: "日常开发",
+        icon: "<>",
+        placeholder: "输入你想处理的代码开发任务...",
+        examples: [
+          ["修复构建报错", "帮我定位 package 构建失败原因并给出修复建议"],
+          ["补单测", "为登录模块补充关键单元测试和边界用例"],
+          ["代码重构", "优化这个组件的状态管理和可读性"]
+        ]
+      },
+      {
+        name: "网站开发",
+        icon: "◎",
+        placeholder: "描述你想开发的网站，例如企业官网、电商首页、活动页...",
+        examples: [
+          ["企业官网", "帮我开发一个企业官网，包含首页、产品、案例和联系表单"],
+          ["电商首页", "帮我开发一个电商网站首页，突出商品分类和促销区域"],
+          ["个人博客", "帮我开发一个个人博客网站，包含文章列表和详情页"]
+        ]
+      },
+      {
+        name: "网页应用",
+        icon: "▣",
+        placeholder: "描述你想生成的网页应用，例如书架管理、课程报名、数据看板...",
+        examples: [
+          ["书架管理系统", "支持书籍录入、分类筛选、借阅状态和后台管理"],
+          ["课程报名应用", "支持课程展示、报名表单、名单管理和导出"],
+          ["团队 OKR 看板", "支持目标拆解、进度跟踪和成员视图"]
+        ]
+      },
+      {
+        name: "小程序",
+        icon: "▦",
+        placeholder: "描述你想生成的小程序，例如运动打卡、活动报名、会员中心...",
+        examples: [
+          ["运动打卡小程序", "支持每日记录、连续天数、排行榜和个人页"],
+          ["门店预约", "支持服务选择、预约时间、用户通知和订单管理"],
+          ["校园活动报名", "支持活动列表、报名审核和二维码签到"]
+        ]
+      },
+      {
+        name: "原型",
+        icon: "□",
+        placeholder: "描述你想生成的产品原型，例如 CRM、后台、工具台...",
+        examples: [
+          ["CRM 销售助手", "设计线索录入、客户分层、跟进提醒和销售看板"],
+          ["运营活动后台", "设计活动配置、数据监控和审批流程"],
+          ["AI 写作工具", "设计素材库、写作面板和版本对比"]
+        ]
+      },
+      {
+        name: "AI 应用",
+        icon: "AI",
+        placeholder: "描述你想生成的 AI 应用，例如简历分析、知识库问答、图片生成...",
+        examples: [
+          ["简历分析助手", "上传简历后给出匹配度、改写建议和面试问题"],
+          ["知识库问答", "支持文档上传、语义检索和答案引用来源"],
+          ["客服质检应用", "分析会话内容，输出评分和改进建议"]
+        ]
+      },
+      {
+        name: "游戏",
+        icon: "◇",
+        placeholder: "描述你想生成的小游戏，例如消除、跑酷、答题、卡牌...",
+        examples: [
+          ["2D 消除小游戏", "包含分数、关卡、连击反馈和结束页"],
+          ["知识答题游戏", "支持题库、计时、排行榜和错题回顾"],
+          ["卡牌合成游戏", "支持卡牌收集、合成和战斗结算"]
+        ]
+      },
+      {
+        name: "Agent 应用",
+        icon: "@",
+        placeholder: "描述你想创建的 Agent 应用...",
+        examples: [
+          ["销售助手", "根据客户资料生成跟进建议和邮件草稿"],
+          ["日报助手", "自动汇总代码提交、任务进展和风险点"],
+          ["知识库 Agent", "根据内部资料回答问题并引用来源"]
+        ]
+      },
+      {
+        name: "Skill 开发",
+        icon: "⚒",
+        placeholder: "描述你想开发的 Skill...",
+        examples: [
+          ["文档技能", "把会议纪要整理成结构化需求文档"],
+          ["图表技能", "把 CSV 数据转换成可解释图表"],
+          ["发布技能", "封装应用构建和部署流程"]
+        ]
+      },
+      {
+        name: "CI/CD",
+        icon: "⚙",
+        placeholder: "描述你的 CI/CD 需求...",
+        examples: [
+          ["修复流水线", "定位构建失败并更新依赖缓存策略"],
+          ["部署脚本", "补充 staging 和 production 的部署流程"],
+          ["质量门禁", "增加测试、lint 和安全扫描步骤"]
+        ]
+      },
+      {
+        name: "文档",
+        icon: "≡",
+        placeholder: "描述你想生成或整理的技术文档...",
+        examples: [
+          ["接口文档", "根据代码生成 API 文档和调用示例"],
+          ["README", "整理项目启动、配置和部署说明"],
+          ["变更说明", "根据 diff 生成版本发布说明"]
+        ]
+      }
+    ];
+
+    const tabs = [
+      { id: "artifacts", label: "产物", icon: "▤" },
+      { id: "preview", label: "预览", icon: "◉" },
+      { id: "prd", label: "需求文档", icon: "▤" },
+      { id: "design", label: "设计系统", icon: "✣" },
+      { id: "cloud", label: "云服务", icon: "☁" },
+      { id: "files", label: "全部文件", icon: "▰" },
+      { id: "changes", label: "变更", icon: "<>" },
+      { id: "browser", label: "浏览器", icon: "◎" }
+    ];
+
+    const state = {
+      screen: "entry",
+      type: null,
+      activeTab: "preview",
+      publish: "idle"
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    function renderTypes() {
+      $("typePills").innerHTML = types.map((item) => {
+        const active = item.name === state.type ? " active" : "";
+        return `<button class="cap-pill${active}" data-type="${item.name}"><span class="icon">${item.icon}</span>${item.name}</button>`;
+      }).join("");
+
+      document.querySelectorAll("[data-type]").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.type = button.dataset.type;
+          document.body.dataset.hasType = "true";
+          renderTypes();
+          renderComposer();
+          document.documentElement.scrollTop = 0;
+          document.body.scrollTop = 0;
+          setTimeout(() => {
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+          }, 80);
+        });
+      });
+    }
+
+    function renderComposer() {
+      const current = types.find((item) => item.name === state.type);
+      if (!current) {
+        document.body.dataset.hasType = "false";
+        $("selectedTypeLabel").innerHTML = "";
+        $("composerPlaceholder").textContent = "";
+        $("examples").innerHTML = "";
+        return;
+      }
+      $("selectedTypeLabel").innerHTML = `<span class="icon">${current.icon}</span>${current.name}<span id="clearType">×</span>`;
+      $("composerPlaceholder").textContent = `${current.name}：${current.placeholder}`;
+      $("examples").innerHTML = current.examples.map(([title, body]) => `
+        <button class="prompt-card">
+          <strong>${title}</strong>
+          <span>${body}</span>
+        </button>
+      `).join("");
+      const clearType = $("clearType");
+      if (clearType) {
+        clearType.addEventListener("click", () => {
+          state.type = null;
+          renderTypes();
+          renderComposer();
+          document.documentElement.scrollTop = 0;
+          document.body.scrollTop = 0;
+          setTimeout(() => {
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+          }, 80);
+        });
+      }
+    }
+
+    function setScreen(screen) {
+      state.screen = screen;
+      document.body.dataset.screen = screen;
+      document.body.dataset.hasType = state.type ? "true" : "false";
+      if (screen === "entry") {
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+        setTimeout(() => {
+          document.documentElement.scrollTop = 0;
+          document.body.scrollTop = 0;
+        }, 80);
+      }
+      const isEntry = screen === "entry";
+      $("entryScreen").classList.toggle("hidden", !isEntry);
+      $("projectScreen").classList.toggle("hidden", isEntry);
+      $("entryView").classList.toggle("active", isEntry);
+      $("projectView").classList.toggle("active", !isEntry);
+      $("chatTitle").textContent = isEntry ? "开始" : "书架管理网页应用";
+      $("projectTask").classList.toggle("active", !isEntry);
+      renderTabs();
+    }
+
+    function renderTabs() {
+      $("projectTabs").innerHTML = tabs.map((tab) => {
+        const active = tab.id === state.activeTab ? " active" : "";
+        return `<button class="project-tab${active}" data-tab="${tab.id}"><span class="icon">${tab.icon}</span>${tab.label}</button>`;
+      }).join("");
+
+      document.querySelectorAll("[data-tab]").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.activeTab = button.dataset.tab;
+          renderTabs();
+        });
+      });
+
+      renderTabContent();
+    }
+
+    function renderTabContent() {
+      const templates = {
+        artifacts: `
+          <div class="doc-page">
+            <div class="change-list">
+              <div class="change-card">
+                <strong>任务产生制品（4个）</strong>
+                <div class="token-row">
+                  <div class="swatch"><strong>预览</strong><div class="user-meta">书架首页 / 后台管理页</div></div>
+                  <div class="swatch"><strong>需求文档</strong><div class="user-meta">PRD 与页面清单</div></div>
+                  <div class="swatch"><strong>设计系统</strong><div class="user-meta">颜色、组件、布局规范</div></div>
+                  <div class="swatch"><strong>云服务</strong><div class="user-meta">数据库、认证、部署配置</div></div>
+                </div>
+              </div>
+              <div class="change-card">
+                <strong>发布状态</strong>
+                <p class="user-meta">未发布时右上角显示「发布」；发布成功后在中间对话流和产物区展示访问链接。</p>
+              </div>
+            </div>
+          </div>
+        `,
+        preview: `
+          <div class="preview-toolbar">
+            <button class="tool-button"><span class="icon">▱</span>桌面</button>
+            <div class="page-select"><span class="icon">⌕</span>书架首页</div>
+            <div class="tool-row">
+              <button class="icon-button" data-toast="正在运行当前预览。">▶</button>
+              <button class="icon-button" data-toast="预览已刷新。">↻</button>
+              <button class="tool-button" data-toast="已进入可视化编辑入口。"><span class="icon">⌖</span>可视化编辑</button>
+            </div>
+          </div>
+          <div class="preview-stage">
+            <div class="app-preview">
+              <div class="preview-placeholder">应用会展示在这里</div>
+            </div>
+          </div>
+        `,
+        prd: `
+          <div class="doc-page">
+            <div class="doc-layout">
+              <article class="paper">
+                <h2>书架管理网页应用 PRD</h2>
+                <p>面向中小团队的内部书籍管理工具，支持书籍录入、分类检索、借阅状态维护、后台管理和公网发布。</p>
+                <h3>核心用户</h3>
+                <ul>
+                  <li>管理员：维护书籍信息、处理借阅状态、查看库存。</li>
+                  <li>成员：浏览书籍、筛选分类、查看借阅状态。</li>
+                </ul>
+                <h3>页面清单</h3>
+                <ul>
+                  <li>书架首页：分类筛选、搜索、最近入库。</li>
+                  <li>图书详情页：封面、简介、借阅状态、操作入口。</li>
+                  <li>后台管理页：新增书籍、编辑分类、借阅记录。</li>
+                  <li>登录页：基础账号登录和权限区分。</li>
+                </ul>
+              </article>
+              <aside class="toc-card">
+                <strong>文档结构</strong>
+                <span>1. 项目目标</span>
+                <span>2. 用户角色</span>
+                <span>3. 功能范围</span>
+                <span>4. 页面流程</span>
+                <span>5. 交付清单</span>
+              </aside>
+            </div>
+          </div>
+        `,
+        design: `
+          <div class="system-page">
+            <div class="system-grid">
+              <section class="paper">
+                <h2>设计系统</h2>
+                <p>Genie 生成的视觉规范会沉淀在这里，可复制到 Figma，也可继续在 WorkBuddy 内迭代。</p>
+                <div class="token-row">
+                  <div class="swatch"><div class="color" style="background:#16b792"></div><strong>Brand Mint</strong><div class="user-meta">主行动色</div></div>
+                  <div class="swatch"><div class="color" style="background:#202124"></div><strong>Ink</strong><div class="user-meta">正文和标题</div></div>
+                  <div class="swatch"><div class="color" style="background:#f7f7f5"></div><strong>Canvas</strong><div class="user-meta">页面底色</div></div>
+                  <div class="swatch"><div class="color" style="background:#2474d8"></div><strong>Link Blue</strong><div class="user-meta">链接与引用</div></div>
+                </div>
+              </section>
+              <section class="paper">
+                <h2>组件样例</h2>
+                <div class="component-samples">
+                  <div class="sample-card"><button class="publish-button">主按钮</button></div>
+                  <div class="sample-card"><span class="selected-chip">网页应用 ×</span></div>
+                  <div class="sample-card"><button class="tool-button"><span class="icon">⌖</span>可视化编辑</button></div>
+                </div>
+              </section>
+            </div>
+          </div>
+        `,
+        cloud: `
+          <div class="cloud-page">
+            <div class="cloud-grid">
+              <div class="cloud-card"><strong>数据库</strong><p class="user-meta">books、categories、borrow_records</p><div class="status-line"><span>状态</span><span class="status-dot">● 已配置</span></div></div>
+              <div class="cloud-card"><strong>认证</strong><p class="user-meta">管理员 / 成员角色</p><div class="status-line"><span>状态</span><span class="status-dot">● 已配置</span></div></div>
+              <div class="cloud-card"><strong>部署</strong><p class="user-meta">等待发布生成访问链接</p><div class="status-line"><span>状态</span><span class="status-dot" style="color:#f5a400">● 待发布</span></div></div>
+            </div>
+          </div>
+        `,
+        files: `
+          <div class="files-page">
+            <div class="files-layout">
+              <div class="file-tree">
+                <div class="file-row folder">▾ bookshelf-app</div>
+                <div class="file-row">  ▸ src</div>
+                <div class="file-row">  ▸ components</div>
+                <div class="file-row">  ▸ pages</div>
+                <div class="file-row">  package.json</div>
+                <div class="file-row">  vite.config.ts</div>
+                <div class="file-row">  README.md</div>
+                <div class="file-row">  genie.config.json</div>
+              </div>
+              <div class="file-preview">选择文件以查看内容</div>
+            </div>
+          </div>
+        `,
+        changes: `
+          <div class="changes-page">
+            <div class="change-list">
+              <div class="change-card"><strong>新增页面结构</strong><div class="diff-line">+ src/pages/Home.tsx<br>+ src/pages/Admin.tsx<br>+ src/pages/BookDetail.tsx</div></div>
+              <div class="change-card"><strong>新增设计系统变量</strong><div class="diff-line">+ src/styles/tokens.css<br>+ src/components/BookCard.tsx</div></div>
+              <div class="change-card"><strong>新增云服务配置</strong><div class="diff-line">+ genie.config.json<br>+ src/services/books.ts</div></div>
+            </div>
+          </div>
+        `,
+        browser: `
+          <div class="browser-page">
+            <div class="browser-empty">
+              <div>
+                <h2 style="margin:0 0 8px;color:var(--ink);font-size:22px;">WorkBuddy 浏览器</h2>
+                <div>保留原有浏览器能力，用于查看运行页面、调试交互和验证发布后的访问链接。</div>
+              </div>
+            </div>
+          </div>
+        `
+      };
+
+      $("tabContent").innerHTML = templates[state.activeTab];
+      document.querySelectorAll("[data-toast]").forEach((button) => {
+        button.addEventListener("click", () => showToast(button.dataset.toast));
+      });
+    }
+
+    function showToast(text) {
+      const toast = $("toast");
+      toast.textContent = text;
+      toast.classList.add("show");
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => toast.classList.remove("show"), 1800);
+    }
+
+    function publish() {
+      const button = $("publishButton");
+      if (state.publish === "success") {
+        showToast("已重新发布，访问链接保持可用。");
+        return;
+      }
+      state.publish = "publishing";
+      button.textContent = "发布中...";
+      button.disabled = true;
+      showToast("正在构建、部署并生成访问链接。");
+      window.setTimeout(() => {
+        state.publish = "success";
+        button.textContent = "已发布";
+        button.classList.add("success");
+        button.disabled = false;
+        $("publishMessage").innerHTML = `
+          <div class="avatar">WB</div>
+          <div class="bubble">
+            <h3>发布成功</h3>
+            访问地址：<span style="color:var(--blue);font-weight:650;">https://bookshelf.genie-demo.codebuddy.ai</span>
+            <div class="result-card">
+              <div class="result-row">
+                <div>
+                  <div class="result-title">公网访问链接已生成</div>
+                  <div class="result-meta">你可以复制链接、打开预览，或在修改后重新发布。</div>
+                </div>
+                <button class="link-button" data-toast="链接已复制。">复制链接 →</button>
+              </div>
+            </div>
+          </div>`;
+        document.querySelectorAll("[data-toast]").forEach((item) => {
+          item.addEventListener("click", () => showToast(item.dataset.toast));
+        });
+        showToast("发布成功，访问链接已生成。");
+      }, 1100);
+    }
+
+    $("entryView").addEventListener("click", () => setScreen("entry"));
+    $("projectView").addEventListener("click", () => setScreen("project"));
+    $("newTask").addEventListener("click", () => setScreen("entry"));
+    $("projectTask").addEventListener("click", () => setScreen("project"));
+    $("startGenerate").addEventListener("click", () => setScreen("project"));
+    $("focusPreview").addEventListener("click", () => {
+      state.activeTab = "preview";
+      setScreen("project");
+    });
+    $("publishButton").addEventListener("click", publish);
+    $("downloadToggle").addEventListener("click", () => {
+      $("downloadMenu").classList.toggle("open");
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!event.target.closest(".workspace-actions")) {
+        $("downloadMenu").classList.remove("open");
+      }
+    });
+
+    renderTypes();
+    renderComposer();
+    renderTabs();
+    setScreen("entry");
+  </script>
+</body>
+</html>
